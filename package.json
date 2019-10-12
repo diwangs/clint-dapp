@@ -1,0 +1,12 @@
+{
+  "name": "clint",
+  "version": "1.0.0",
+  "description": "Ethereum crowdsourcing credit system",
+  "main": " ",
+  "repository": "https://github.com/diwangs/clint",
+  "author": "diwangs <27280516+diwangs@users.noreply.github.com>",
+  "license": "GPLv3",
+  "dependencies": {
+    "truffle": "^5.0.40"
+  }
+}
