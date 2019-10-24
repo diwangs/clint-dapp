@@ -145,27 +145,18 @@ contract TrstToken {
 
 		// Move balance accordingly
 		_totalStake[_candidate] = _totalStake[_candidate] - _stake[_candidate][msg.sender] + _value;
-		uint256 prevStake;
-		if (_stake[_candidate][msg.sender] < 0) {
-			prevStake = uint256(-_stake[_candidate][msg.sender]);
-		} else {
-			prevStake = uint256(_stake[_candidate][msg.sender]);
-		}
-		if (_value < 0) {
-			_balances[msg.sender] = _balances[msg.sender] + prevStake - uint256(-_value);
-		} else {
-			_balances[msg.sender] = _balances[msg.sender] + prevStake - uint256(_value);
-		}
+		uint256 absPrevStake = _abs(_stake[_candidate][msg.sender]);
+		uint256 absValue = _abs(_value);
+		_balances[msg.sender] = _balances[msg.sender] + absPrevStake - absValue;
 		_stake[_candidate][msg.sender] = _value;
 
-		// Liquidate credit if trust threshold exceeded
+		// Act if trust threshold exceeded
 		if (_totalStake[_candidate] >= _upper_threshold || _totalStake[_candidate] <= _lower_threshold) {
 			if (_totalStake[_candidate] >= _upper_threshold) {
 				// TODO: actually liquidate
-				// TODO: reward
-			} else {
-				// TODO: punish
 			}
+
+			// TODO: reward and punish
 
 			// reset stake
 			_resetStake(_candidate);
@@ -178,16 +169,21 @@ contract TrstToken {
 	function _resetStake(address _candidate) private {
 		delete _totalStake[_candidate];
 		for (uint i = 0; i < _staker[_candidate].length; i++) {
-			if (_stake[_candidate][_staker[_candidate][i]] < 0) {
-				_balances[_staker[_candidate][i]] += uint256(-_stake[_candidate][_staker[_candidate][i]]);
-			} else {
-				_balances[_staker[_candidate][i]] += uint256(_stake[_candidate][_staker[_candidate][i]]);
-			}
+			uint256 absStake = _abs(_stake[_candidate][_staker[_candidate][i]]);
+			_balances[_staker[_candidate][i]] += absStake;
 
 			delete _stake[_candidate][_staker[_candidate][i]];
 			delete _stakeIdx[_candidate][_staker[_candidate][i]];
 		}
 		delete _staker[_candidate];
+	}
+
+	function _abs(int256 signed) private pure returns (uint256) {
+		if (signed < 0) {
+			return uint256(-signed);
+		} else {
+			return uint256(signed);
+		}
 	}
 
 
