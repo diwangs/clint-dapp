@@ -5,7 +5,7 @@
   "main": " ",
   "repository": "https://github.com/diwangs/clint",
   "author": "diwangs <27280516+diwangs@users.noreply.github.com>",
-  "license": "GPLv3",
+  "license": "Apache-2.0",
   "dependencies": {
     "truffle": "^5.0.40"
   }

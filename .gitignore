@@ -1,2 +1,4 @@
 node_modules/
 build/
+smart_contracts/build
+ganache*

@@ -1,16 +1,17 @@
 module.exports = {
-  contracts_directory: "./smart_contracts/contracts",
-  migrations_directory: "./smart_contracts/migrations",
+  // contracts_directory: "./smart_contracts/contracts",
+  // contracts_build_directory: "./smart_contracts/build",
+  // migrations_directory: "./smart_contracts/migrations",
   // Uncommenting the defaults below 
   // provides for an easier quick-start with Ganache.
   // You can also follow this format for other networks;
   // see <http://truffleframework.com/docs/advanced/configuration>
   // for more details on how to specify configuration options!
   //
-  //networks: {
+  // networks: {
   //  development: {
   //    host: "127.0.0.1",
-  //    port: 7545,
+  //    port: 8545,
   //    network_id: "*"
   //  },
   //  test: {
@@ -18,6 +19,6 @@ module.exports = {
   //    port: 7545,
   //    network_id: "*"
   //  }
-  //}
+  // }
   //
 };

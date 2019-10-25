@@ -1,16 +1,12 @@
-# clint
+# clint-dapp
 A crowdsourced bank credit system based on Ethereum
 
 ## Dev Setup
-`npm install` or `yarn install`
+1. `npm install` or `yarn install`
+2. Install metamask browser plugin (from your browser web store), this is used to enable your browser to communicate with Ethereum
 
-## Smart Contracts
-All related SC will be stored in the `smart_contracts` folder. It adheres to truffle's project structure.
+## Testing
+`yarn run truffle test`
 
-Stuffed with metacoin code for now
-
-### Testing
-`yarn run truffle test <test-file-directory-from-project-root>`
-
-### Deployment
+## Deployment
 TBA
