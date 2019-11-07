@@ -1,84 +1,93 @@
 pragma solidity >=0.4.25 <0.6.0;
 
 // ALL TOKEN UNIT MUST BE MILLITRST
+import './TrstToken.sol';
 
 contract ClintVault {
-	address _root;
-    address _stakeContractAddr;
+	address payable root;
+    address stakeContractAddr;
+    TrstToken tokenContract;
 
-    uint256 interest; // How many wei for every ether loaned
+    uint interest; // How many wei per ether loaned per day?
 
-    mapping (address => uint256) proposedLoan;
     enum LoanStatus {IDLE, PROPOSED, LENT}
     mapping (address => LoanStatus) loanStatus;
+    mapping (address => uint) proposedLoan; // IN WEI
+    mapping (address => uint) lentTimestamp; // TODO: change to block number?
 
 
-    constructor() public {
-		_root = msg.sender;
+    constructor(address payable _tokenContractAddr) public { // is it must be payable?
+		root = msg.sender;
+        tokenContract = TrstToken(_tokenContractAddr);
+        tokenContract.setVaultContractAddr(address(this));
 
 		interest = 1;
 	}
 
 
     modifier onlyRoot() {
-        require(msg.sender == _root, "You're not root");
+        require(msg.sender == root, "You're not authorized");
         _;
     }
 
     modifier onlyStakeContract() {
-        require(msg.sender == _stakeContractAddr, "You're not a stake contract");
+        require(msg.sender == stakeContractAddr, "You're not authorized");
         _;
     }
 
 
-    // *** GETTER ***
-    function getProposedLoan(address _candidate) public view returns (uint256) {
-        return proposedLoan[_candidate];
+    // *** operation methods ***
+    function proposeLoan(uint _value) external {
+        // TODO: check values?
+        proposedLoan[msg.sender] = _value;
+        loanStatus[msg.sender] = LoanStatus.PROPOSED;
     }
 
-    function getLoanStatus(address _candidate) public view returns (LoanStatus) {
-        return loanStatus[_candidate];
-    }
-
-
-    // *** OPS ***
-    function proposeLoan(uint256 _value) public returns (bool) {
-        // checks?
-        // change proposedLoan
-        // change loanStatus
-        return false;
-    }
-
-    function liquidateLoan(address _candidate) public onlyStakeContract returns (bool) {
+    function liquidateLoan(address payable _candidate) external onlyStakeContract payable {
         // send ether from root to _candidate
-        // change loanStatus
-        return false;
+        _candidate.transfer(proposedLoan[_candidate]);
+
+        // change loanStatus and lentTimestamp
+        loanStatus[_candidate] = LoanStatus.LENT;
+        lentTimestamp[_candidate] = block.timestamp;
     }
 
-    function returnLoan() public payable returns (bool) {
-        // check if the sender has a loan
-        // receive eth
-        _cancelLoan(msg.sender);
-        // give token incentive to msg.sender
-        return false;
-    }
+    function returnLoan() external payable {
+        require(loanStatus[msg.sender] == LoanStatus.LENT, "We're currently not lending you anything");
+        // TODO: calculate and charge interest
+        require(msg.value == proposedLoan[msg.sender], "Uang pas donk");
 
-
-    // *** ADMIN ***
-    function cancelLoan(address _candidate) public onlyRoot returns (bool){
-        return _cancelLoan(_candidate);
-    }
-
-    // TODO: Authorize this
-    function setStakeContractAddr(address _address) public {
-        _stakeContractAddr = _address;
+        // receive eth is done at the background
+        cancelLoan(msg.sender);
+        tokenContract.transferFrom(root, msg.sender, 10000); // TODO: change to actual incentive
     }
 
 
-    // *** INTERNALS ***
-    function _cancelLoan(address _candidate) private returns (bool) {
+    // *** administrative methods ***
+    function cancelLoanOf(address _candidate) external onlyRoot {
+        cancelLoan(_candidate);
+    }
+
+    function setInterest(uint _value) external onlyRoot {
+        interest = _value;
+    }
+
+    function() external payable {} // fallback function, used to deposit ETH
+
+    function withdraw(uint _value) external onlyRoot {
+        root.transfer(_value);
+    }
+
+    function setStakeContractAddr(address _address) external {
+        require(stakeContractAddr == address(0), "Address has been set");
+        stakeContractAddr = _address;
+    }
+
+
+    // *** private methods ***
+    function cancelLoan(address _candidate) private {
         delete proposedLoan[_candidate];
         delete loanStatus[_candidate];
-        return true;
+        delete lentTimestamp[_candidate];
     }
 }

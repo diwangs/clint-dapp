@@ -74,7 +74,7 @@ contract Staking {
 	function setStake(address _candidate, int256 _value) public returns (bool) {
         // TODO: allow revision?
 		require(_candidate != address(0), "Yeet");
-        require(_vaultContract.getLoanStatus(_candidate) == ClintVault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
+        require(_vaultContract.getLoanStatusOf(_candidate) == ClintVault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
         require(_stake[_candidate][msg.sender] == 0, "You've already voted");
 		// TODO: clamp value
 
