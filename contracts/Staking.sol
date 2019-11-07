@@ -23,7 +23,7 @@ contract Staking {
 	mapping (address => mapping (address => uint)) private _stakeIdx;
 	mapping (address => int256) private _totalStake;
 
-	constructor(address _tokenContractAddr, address _vaultContractAddr) public {
+	constructor(address payable _tokenContractAddr, address payable _vaultContractAddr) public {
 		_root = msg.sender;
 
 		_upper_threshold = 100000; // How much milliTrst untill liquidation?
@@ -71,10 +71,10 @@ contract Staking {
 	* @param _value The amount of stake
 	* @return a boolean indicating the set status
 	*/
-	function setStake(address _candidate, int256 _value) public returns (bool) {
+	function setStake(address payable _candidate, int256 _value) public returns (bool) {
         // TODO: allow revision?
 		require(_candidate != address(0), "Yeet");
-        require(_vaultContract.getLoanStatusOf(_candidate) == ClintVault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
+        require(_vaultContract.loanStatus(_candidate) == ClintVault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
         require(_stake[_candidate][msg.sender] == 0, "You've already voted");
 		// TODO: clamp value
 

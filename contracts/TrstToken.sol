@@ -19,9 +19,9 @@ contract TrstToken {
     address vaultContractAddr;
 
 	uint256 totalSupply;
-	uint256 price; // in Wei/mTrst
+	uint256 public price; // in Wei/mTrst
 
-	mapping (address => uint256) balance; // in milliTrst
+	mapping (address => uint256) public balance; // in milliTrst
 
 
 
@@ -60,20 +60,14 @@ contract TrstToken {
 
     // *** Operation Methods ***
     /**
-	* @dev Transfer some token from an account to another. Can only be done by another Clint
+	* @dev Transfer some tokens from an account to another. Can only be done by another Clint
 	* 	contract or root
 	* @param _from The address to transfer from
 	* @param _to The address to transfer to
 	* @param _value The amount to be transferred
 	*/
-	function transferFrom(address _from, address _to, uint _value) public onlyClint {
-		require(_to != address(0), "Destination address must not be 0"); // Prevent burning?
-		require(_value <= balance[_from], "Insufficient balance");
-
-		balance[_from] -= _value;
-		balance[_to] += _value;
-
-		emit TokenTx(_from, _to, _value);
+	function transferFrom(address _from, address _to, uint _value) external onlyClint {
+		transferFromInternal(_from, _to, _value);
 	}
 
 	/**
@@ -81,7 +75,7 @@ contract TrstToken {
 	* @param _value The amount to be redeemed
 	*/
     function redeem(uint256 _value) external {
-		transferFrom(msg.sender, root, _value);
+		transferFromInternal(msg.sender, root, _value);
         msg.sender.transfer(_value * price);
     }
 
@@ -152,4 +146,23 @@ contract TrstToken {
         require(stakeContractAddr == address(0), "Address has been set");
         stakeContractAddr = _address;
     }
+
+
+
+	// *** Internal Methods ***
+    /**
+	* @dev Internal method for transfering some tokens from an account to another
+	* @param _from The address to transfer from
+	* @param _to The address to transfer to
+	* @param _value The amount to be transferred
+	*/
+	function transferFromInternal(address _from, address _to, uint _value) private {
+		require(_to != address(0), "Destination address must not be 0"); // Prevent burning?
+		require(_value <= balance[_from], "Insufficient balance");
+
+		balance[_from] -= _value;
+		balance[_to] += _value;
+
+		emit TokenTx(_from, _to, _value);
+	}
 }

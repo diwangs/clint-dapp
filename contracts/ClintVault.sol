@@ -11,7 +11,7 @@ contract ClintVault {
     uint interest; // How many wei per ether loaned per day?
 
     enum LoanStatus {IDLE, PROPOSED, LENT}
-    mapping (address => LoanStatus) loanStatus;
+    mapping (address => LoanStatus) public loanStatus;
     mapping (address => uint) proposedLoan; // IN WEI
     mapping (address => uint) lentTimestamp; // TODO: change to block number?
 
