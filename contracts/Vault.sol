@@ -20,17 +20,18 @@ contract Vault {
 
     uint public interestRateNum;
     uint public interestRateDenom;
-    // rate = how many interestRateNum per interestRateDenom loaned
+    // interestRate = interestRateNum / interestRateDenom
     uint public latenessMultiplierNum;
     uint public latenessMultiplierDenom;
     // additional rate if late:
-    // latenessMultiplierNum / latenessMultiplierDenom * late (seconds) * interestRate
+    // interestRate += latenessMultiplier * late (seconds) * interestRate
 
     enum LoanStatus {IDLE, PROPOSED, LENT}
     mapping (address => LoanStatus) public loanStatus;
-    mapping (address => uint) proposedLoan; // in Wei
-    mapping (address => uint) deadlineDuration; // in s
-    mapping (address => uint) lentTimestamp; // TODO: change to block number?
+    mapping (address => uint) public proposedLoan; // in Wei
+    mapping (address => uint) public dueDuration; // promised duration to return the ETH, in seconds
+    mapping (address => uint) public lentTimestamp; // UNIX timestamp when the proposal is granted
+    // TODO: change to block number?
 
 
 
@@ -70,14 +71,14 @@ contract Vault {
     * @dev Proposes a loan to the Clint system. Each address can only have 1 active lending
     *   process at a time
     * @param _value The amount of money to be lent
-    * @param _deadlineDuration The promised duration to return the money (in seconds)
+    * @param _dueDuration The promised duration to return the money (in seconds)
     */
-    function proposeLoan(uint _value, uint _deadlineDuration) external {
+    function proposeLoan(uint _value, uint _dueDuration) external {
         require(loanStatus[msg.sender] == LoanStatus.IDLE, "You already have an active loan");
         // TODO: check _value?
 
         proposedLoan[msg.sender] = _value;
-        deadlineDuration[msg.sender] = _deadlineDuration;
+        dueDuration[msg.sender] = _dueDuration;
         loanStatus[msg.sender] = LoanStatus.PROPOSED;
 
         emit LoanStatusChange(msg.sender, LoanStatus.PROPOSED, true);
@@ -119,7 +120,7 @@ contract Vault {
 
         uint effRateNum = interestRateNum;
         // add interest if it's late
-        uint deadlineTimestamp = lentTimestamp[msg.sender] + deadlineDuration[msg.sender];
+        uint deadlineTimestamp = lentTimestamp[msg.sender] + dueDuration[msg.sender];
         if (block.timestamp > deadlineTimestamp) {
             uint lateness = block.timestamp - deadlineTimestamp;
             effRateNum += latenessMultiplierNum * lateness * effRateNum / latenessMultiplierDenom;
@@ -213,7 +214,7 @@ contract Vault {
     function _cancelLoan(address _candidate) private {
         delete proposedLoan[_candidate];
         delete loanStatus[_candidate];
-        delete deadlineDuration[_candidate];
+        delete dueDuration[_candidate];
         delete lentTimestamp[_candidate];
     }
 }

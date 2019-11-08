@@ -18,7 +18,7 @@ contract TrstToken {
     address stakeContractAddr;
     address vaultContractAddr;
 
-	uint256 public totalSupply;
+	uint256 public totalSupply; // total amount of token in the system
 	uint256 public price; // in Wei/mTrst
 
 	mapping (address => uint256) public balance; // in milliTrst

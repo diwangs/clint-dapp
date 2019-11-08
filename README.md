@@ -2,15 +2,27 @@
 A crowdsourced bank credit system based on Ethereum
 
 ## Public interface
-* Vault
-  * State getters
-  * proposeLoan
-  * returnLoan
 * TrstToken
   * State getters
-  * redeem
-* Staking
+    * `balance(address)`
+    * `price()`
+    * `totalSupply()`
+  * `redeem(amount)`
+* Vault
   * State getters
+    * `loanStatus(address)`
+    * `proposedLoan(address)`
+    * `dueDuration(address)`
+    * `lentTimestamp(address)`
+    * `interestRateNum()`
+    * `interestRateDenom()`
+    * `latenessMultiplierNum()`
+    * `latenessMultiplierDenom()`
+  * `proposeLoan(amount, dueDuration)`
+  * `cancelProposal()`
+  * `returnLoan()`
+* Staking
+  * TBA
 
 ## Dev Setup
 1. `npm install` or `yarn install`
