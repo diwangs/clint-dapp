@@ -2,7 +2,7 @@
 A crowdsourced bank credit system based on Ethereum
 
 ## Public interface
-* ClintVault
+* Vault
   * State getters
   * proposeLoan
   * returnLoan

@@ -1,12 +1,12 @@
 pragma solidity >=0.4.25 <0.6.0;
 
 import './TrstToken.sol';
-import './ClintVault.sol';
+import './Vault.sol';
 
 contract Staking {
 	address _root;
     TrstToken _tokenContract;
-    ClintVault _vaultContract;
+    Vault _vaultContract;
 
 	int256 _upper_threshold;
 	int256 _lower_threshold;
@@ -34,7 +34,7 @@ contract Staking {
 
         _tokenContract = TrstToken(_tokenContractAddr);
         _tokenContract.setStakeContractAddr(address(this));
-        _vaultContract = ClintVault(_vaultContractAddr);
+        _vaultContract = Vault(_vaultContractAddr);
         _vaultContract.setStakeContractAddr(address(this));
 	}
 
@@ -74,7 +74,7 @@ contract Staking {
 	function setStake(address payable _candidate, int256 _value) public returns (bool) {
         // TODO: allow revision?
 		require(_candidate != address(0), "Yeet");
-        require(_vaultContract.loanStatus(_candidate) == ClintVault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
+        require(_vaultContract.loanStatus(_candidate) == Vault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
         require(_stake[_candidate][msg.sender] == 0, "You've already voted");
 		// TODO: clamp value
 

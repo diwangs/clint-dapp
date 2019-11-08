@@ -18,7 +18,7 @@ contract TrstToken {
     address stakeContractAddr;
     address vaultContractAddr;
 
-	uint256 totalSupply;
+	uint256 public totalSupply;
 	uint256 public price; // in Wei/mTrst
 
 	mapping (address => uint256) public balance; // in milliTrst
@@ -122,7 +122,7 @@ contract TrstToken {
 	function() external payable {}
 
 	/**
-	* @dev Withdraw ETH from the contract into root's account. Can only be called by root.
+	* @dev Withdraw ETH from the contract into root's account. Can only be called by root
 	* @param _value Withdrawal amount
 	*/
     function withdraw(uint _value) external onlyRoot {
@@ -139,7 +139,7 @@ contract TrstToken {
     }
 
 	/**
-	* @dev Set the stake contract's address. Can only be called once.
+	* @dev Set the stake contract's address. Can only be called once
 	* @param _address stake contract's address
 	*/
     function setStakeContractAddr(address _address) external {

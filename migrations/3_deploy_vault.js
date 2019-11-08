@@ -1,6 +1,6 @@
 const TrstToken = artifacts.require("./TrstToken.sol");
-const ClintVault = artifacts.require("./ClintVault.sol");
+const Vault = artifacts.require("./Vault.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(ClintVault, TrstToken.address)
+  deployer.deploy(Vault, TrstToken.address)
 };

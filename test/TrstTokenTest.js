@@ -208,7 +208,7 @@ contract('TrstToken', (accounts) => {
         const balanceAfter = new BigNumber(await web3.eth.getBalance(rando));
         
         assert.equal(balanceAfter.minus(balanceBefore).plus(gasCost).valueOf(), amount * price.valueOf(), "Transfer unsucessful")
-      });
+      })
 
       it('shouldn\'t allow rando to redeem with insufficient balance', async () => {
         const trstContract = await TrstToken.deployed();
