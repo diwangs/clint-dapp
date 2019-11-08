@@ -1,7 +1,6 @@
 const BigNumber = require('bignumber.js'); // avoid overflow
 // TODO: change all number to BigNumber?
 
-const TrstToken = artifacts.require("TrstToken");
 const Vault = artifacts.require("Vault");
 
 const PREFIX = "Returned error: VM Exception while processing transaction: "
