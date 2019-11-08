@@ -1,6 +1,5 @@
 pragma solidity >=0.4.25 <0.6.0;
 
-// ALL TOKEN UNIT MUST BE MILLITRST
 import './TrstToken.sol';
 
 contract ClintVault {
@@ -8,23 +7,34 @@ contract ClintVault {
     address stakeContractAddr;
     TrstToken tokenContract;
 
-    uint interest; // How many wei per ether loaned per day?
+    uint interestMultiplier;
+    uint interestDivisor;
+    // rate = how many interestMultiplier per interestDivisor loaned
+    uint lateMultiplier;
+    uint lateDivisor;
+    // additional rate if late = lateMultiplier / lateDivisor * late (seconds) * interestRate
 
     enum LoanStatus {IDLE, PROPOSED, LENT}
     mapping (address => LoanStatus) public loanStatus;
-    mapping (address => uint) proposedLoan; // IN WEI
+    mapping (address => uint) proposedLoan; // in Wei
+    mapping (address => uint) deadlineDuration; // in s
     mapping (address => uint) lentTimestamp; // TODO: change to block number?
 
 
-    constructor(address payable _tokenContractAddr) public { // is it must be payable?
+    constructor(address payable _tokenContractAddr) public {
 		root = msg.sender;
         tokenContract = TrstToken(_tokenContractAddr);
         tokenContract.setVaultContractAddr(address(this));
 
-		interest = 1;
+		interestMultiplier = 1;
+        interestDivisor = 1e3; // 0.1%
+        lateMultiplier = 1;
+        lateDivisor = 1209600; // 2 weeks
 	}
 
 
+
+    // *** Modifiers ***
     modifier onlyRoot() {
         require(msg.sender == root, "You're not authorized");
         _;
@@ -36,11 +46,30 @@ contract ClintVault {
     }
 
 
+
+    // *** Events ***
+    event LoanStatusChange(address indexed _address, LoanStatus to, bool isNormal);
+
+
+
     // *** operation methods ***
-    function proposeLoan(uint _value) external {
-        // TODO: check values?
+    function proposeLoan(uint _value, uint _deadlineDuration) external {
+        require(loanStatus[msg.sender] == LoanStatus.IDLE, "Settle your current proposal/lending first");
+        // TODO: check _value?
+
         proposedLoan[msg.sender] = _value;
+        deadlineDuration[msg.sender] = _deadlineDuration;
         loanStatus[msg.sender] = LoanStatus.PROPOSED;
+
+        emit LoanStatusChange(msg.sender, LoanStatus.PROPOSED, true);
+    }
+
+    function cancelProposal() external {
+        require(loanStatus[msg.sender] == LoanStatus.PROPOSED, "You don't have active proposal");
+
+        _cancelLoan(msg.sender);
+
+        emit LoanStatusChange(msg.sender, LoanStatus.IDLE, true);
     }
 
     function liquidateLoan(address payable _candidate) external onlyStakeContract payable {
@@ -50,26 +79,52 @@ contract ClintVault {
         // change loanStatus and lentTimestamp
         loanStatus[_candidate] = LoanStatus.LENT;
         lentTimestamp[_candidate] = block.timestamp;
+
+        emit LoanStatusChange(_candidate, LoanStatus.LENT, true);
     }
 
     function returnLoan() external payable {
         require(loanStatus[msg.sender] == LoanStatus.LENT, "We're currently not lending you anything");
-        // TODO: calculate and charge interest
-        require(msg.value == proposedLoan[msg.sender], "Uang pas donk");
+        uint effectiveMultiplier = interestMultiplier;
+        // add interest if it's late
+        if (block.timestamp > lentTimestamp[_candidate] + deadlineDuration) {
+            uint late = block.timestamp - (lentTimestamp[_candidate] + deadlineDuration);
+            effectiveMultiplier += lateMultiplier * late * effectiveMultiplier / lateDivisor;
+        }
+        uint interest = effectiveMultiplier * proposedLoan[msg.sender] / interestDivisor;
+        require(msg.value < proposedLoan[msg.sender] + interest, "Not enough");
 
         // receive eth is done at the background
-        cancelLoan(msg.sender);
-        tokenContract.transferFrom(root, msg.sender, 10000); // TODO: change to actual incentive
+        _cancelLoan(msg.sender);
+        emit LoanStatusChange(msg.sender, LoanStatus.IDLE, true);
+
+        // Give Token incentive
+        tokenContract.transferFrom(root, msg.sender, 100000); // TODO: change incentive mechanics
     }
+
 
 
     // *** administrative methods ***
     function cancelLoanOf(address _candidate) external onlyRoot {
-        cancelLoan(_candidate);
+        _cancelLoan(_candidate);
+
+        emit LoanStatusChange(_candidate, LoanStatus.IDLE, false);
     }
 
-    function setInterest(uint _value) external onlyRoot {
-        interest = _value;
+    function setInterestMultiplier(uint _value) external onlyRoot {
+        interestMultiplier = _value;
+    }
+
+    function setInterestDivisor(uint _value) external onlyRoot {
+        interestDivisor = _value;
+    }
+
+    function setLateMultiplier(uint _value) external onlyRoot {
+        lateMultiplier = _value;
+    }
+
+    function setLateDivisor(uint _value) external onlyRoot {
+        lateDivisor = _value;
     }
 
     function() external payable {} // fallback function, used to deposit ETH
@@ -85,9 +140,10 @@ contract ClintVault {
 
 
     // *** private methods ***
-    function cancelLoan(address _candidate) private {
+    function _cancelLoan(address _candidate) private {
         delete proposedLoan[_candidate];
         delete loanStatus[_candidate];
+        delete deadlineDuration[_candidate];
         delete lentTimestamp[_candidate];
     }
 }

@@ -67,7 +67,7 @@ contract TrstToken {
 	* @param _value The amount to be transferred
 	*/
 	function transferFrom(address _from, address _to, uint _value) external onlyClint {
-		transferFromInternal(_from, _to, _value);
+		_transferFrom(_from, _to, _value);
 	}
 
 	/**
@@ -75,7 +75,7 @@ contract TrstToken {
 	* @param _value The amount to be redeemed
 	*/
     function redeem(uint256 _value) external {
-		transferFromInternal(msg.sender, root, _value);
+		_transferFrom(msg.sender, root, _value);
         msg.sender.transfer(_value * price);
     }
 
@@ -156,7 +156,7 @@ contract TrstToken {
 	* @param _to The address to transfer to
 	* @param _value The amount to be transferred
 	*/
-	function transferFromInternal(address _from, address _to, uint _value) private {
+	function _transferFrom(address _from, address _to, uint _value) private {
 		require(_to != address(0), "Destination address must not be 0"); // Prevent burning?
 		require(_value <= balance[_from], "Insufficient balance");
 
