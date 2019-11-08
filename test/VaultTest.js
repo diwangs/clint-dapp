@@ -198,5 +198,6 @@ contract('Vault', (accounts) => {
                 }
             })
         })
+        // TODO: test liquidateLoan and returnLoan? need stub
     })
 })
