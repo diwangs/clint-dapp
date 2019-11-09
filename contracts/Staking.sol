@@ -32,7 +32,7 @@ contract Staking {
 	* In ERC-20, this is called `_allowed`
 	*/
 	mapping (address => mapping (address => int256)) public stake;
-	mapping (address => int256) private totalStake;
+	mapping (address => int256) public totalStake;
 	mapping (address => address[]) private stakers;
 
 	constructor(address payable tokenContractAddr, address payable vaultContractAddr) public {
