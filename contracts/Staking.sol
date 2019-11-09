@@ -81,7 +81,7 @@ contract Staking {
 	function setStake(address payable _candidate, int256 _value) external {
 		require(_candidate != address(0), "Invalid address");
         require(vaultContract.loanStatus(_candidate) == Vault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
-        require(stake[_candidate][msg.sender] != 0, "You've already voted");
+        require(stake[_candidate][msg.sender] == 0, "You've already voted");
 		// TODO: clamp mechanism
 
 		stakers[_candidate].push(msg.sender);
