@@ -80,6 +80,7 @@ contract Staking {
 	*/
 	function setStake(address payable _candidate, int256 _value) external {
 		require(_candidate != address(0), "Invalid address");
+		require(_candidate != msg.sender, "Invalid address");
         require(vaultContract.loanStatus(_candidate) == Vault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
         require(stake[_candidate][msg.sender] == 0, "You've already voted");
 		// TODO: clamp mechanism
@@ -102,7 +103,9 @@ contract Staking {
 
 		tokenContract.transferFrom(root, msg.sender, absStake);
 
+		totalStake[_candidate] -= stake[_candidate][msg.sender];
 		delete stake[_candidate][msg.sender];
+
 		for (uint i = 0; i < stakers[_candidate].length; i++) {
 			if (stakers[_candidate][i] == msg.sender) {
 				delete stakers[_candidate][i];

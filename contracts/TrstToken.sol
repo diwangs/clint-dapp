@@ -30,7 +30,7 @@ contract TrstToken {
 		balance[root] = 100000; // hard-coded initial balance
 		totalSupply = balance[root];
 
-		price = 1000; // 1000 wei == 1 milliTrst
+		price = 1 szabo; // 1 szabo == 1 milliTrst
 	}
 
 

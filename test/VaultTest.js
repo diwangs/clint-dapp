@@ -5,8 +5,8 @@ const Vault = artifacts.require("Vault");
 
 const PREFIX = "Returned error: VM Exception while processing transaction: "
 const AUTH_ERR = "You're not authorized"
-const DOUBLE_LEND_ERR = "You already have an active loan"
-const NO_LEND_ERR = "You don't have an active loan"
+const DOUBLE_PROP_ERR = "You already have an active proposal"
+const NO_PROP_ERR = "You don't have an active proposal"
 
 async function getGasCost(txinfo) {
     const tx = await web3.eth.getTransaction(txinfo.tx);
@@ -23,7 +23,7 @@ contract('Vault', (accounts) => {
         describe("deposit (Fallback Function)", () => {
             it('should allow deposit', async () => {
                 await Vault.deployed();
-                const amount = web3.utils.toWei("1", "ether")
+                const amount = web3.utils.toWei("2", "ether")
             
                 const balanceBefore = await web3.eth.getBalance(Vault.address)
                 await web3.eth.sendTransaction({
@@ -171,7 +171,7 @@ contract('Vault', (accounts) => {
                     await vaultContract.proposeLoan(1, "1209600", {from: rando})
                 } catch (error) {
                     assert(error, "Transaction successful")
-                    assert(error.message.startsWith(PREFIX + "revert " + DOUBLE_LEND_ERR))
+                    assert(error.message.startsWith(PREFIX + "revert " + DOUBLE_PROP_ERR))
                 }
             })
         })
@@ -193,7 +193,7 @@ contract('Vault', (accounts) => {
                 await vaultContract.cancelProposal({from: rando})
                 } catch (error) {
                     assert(error, "Transaction successful")
-                    assert(error.message.startsWith(PREFIX + "revert " + NO_LEND_ERR))
+                    assert(error.message.startsWith(PREFIX + "revert " + NO_PROP_ERR))
                 }
             })
         })

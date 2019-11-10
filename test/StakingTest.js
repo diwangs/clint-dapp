@@ -5,13 +5,15 @@ const Vault = artifacts.require("Vault");
 const PREFIX = "Returned error: VM Exception while processing transaction: "
 const AUTH_ERR = "You're not authorized"
 const ADDR_ERR = "Invalid address"
-const NO_PROP_ERROR = "The candidate isn't asking any vote"
+const DOUBLE_VOTE_ERR = "You've already voted"
+const NO_PROP_ERR = "The candidate isn't asking any vote"
 
 contract('Staking', (accounts) => {
     const root = accounts[0]
     const rando1 = accounts[1]
     const rando2 = accounts[2]
     const rando3 = accounts[3]
+    const rando4 = accounts[4]
     let stakeContract
 
     beforeEach(async () => {
@@ -155,12 +157,40 @@ contract('Staking', (accounts) => {
             await trstContract.mint(rando1, 100000, {from: root})
             await trstContract.mint(rando2, 100000, {from: root})
             await trstContract.mint(rando3, 100000, {from: root})
+            await trstContract.mint(rando4, 100000, {from: root})
 
             const vaultContract = await Vault.deployed();
             await vaultContract.proposeLoan(web3.utils.toWei("1", "ether"), "1209600", {from: rando1})
+            await vaultContract.proposeLoan(web3.utils.toWei("1", "ether"), "1209600", {from: rando2})
+
+            await web3.eth.sendTransaction({
+                from: root,
+                to: Vault.address,
+                value: web3.utils.toWei("5", "ether")
+            })
         })
 
         describe("setStake", () => {
+            it('should handle positive stake correctly', async () => {
+                const amount = 50000;
+                
+                const totalStakeBefore = await stakeContract.totalStake(rando1)
+                await stakeContract.setStake(rando1, amount, { from: rando2 })
+                const totalStakeAfter = await stakeContract.totalStake(rando1)
+
+                assert.equal(totalStakeAfter.valueOf() - totalStakeBefore.valueOf(), amount, "Staked amount doesn't match")
+            })
+
+            it('should handle negative stake correctly', async () => {
+                const amount = -10000;
+                
+                const totalStakeBefore = await stakeContract.totalStake(rando1)
+                await stakeContract.setStake(rando1, amount, { from: rando3 })
+                const totalStakeAfter = await stakeContract.totalStake(rando1)
+
+                assert.equal(totalStakeAfter.valueOf() - totalStakeBefore.valueOf(), amount, "Staked amount doesn't match")
+            })
+            
             it("shouldn\'t allow someone to vote for address 0", async () => {
                 try {
                     await stakeContract.setStake("0x0000000000000000000000000000000000000000", 1, { from: rando1 });
@@ -170,47 +200,57 @@ contract('Staking', (accounts) => {
                 }
             })
 
-            it("shouldn\'t let someone stake someone without a proposal", async () => {
-                // try {
-                //     await stakeContract.setStake(rando1, 1, { from: rando2 });
-                // } catch (error) {
-                //     assert(error, "Transaction successful")
-                //     assert(error.message.startsWith(PREFIX + "revert " + NO_PROP_ERROR))
-                // }
-                assert(true)
+            it("shouldn\'t allow someone to vote for themself", async () => {
+                try {
+                    await stakeContract.setStake(rando1, 1, { from: rando1 });
+                } catch (error) {
+                    assert(error, "Transaction successful")
+                    assert(error.message.startsWith(PREFIX + "revert " + ADDR_ERR))
+                }
             })
 
-            it('should handle positive stake correctly', async () => {
-                const amount = 50000;
-                
-                await stakeContract.setStake(rando1, amount, { from: rando2 });
-                const stake12 = await stakeContract.stake(rando1, rando2);
+            it("shouldn\'t let someone stake someone without a proposal", async () => {
+                try {
+                    await stakeContract.setStake(rando2, 1, { from: rando1 });
+                } catch (error) {
+                    assert(error, "Transaction successful")
+                    assert(error.message.startsWith(PREFIX + "revert " + NO_PROP_ERR))
+                }
+            })
 
-                assert.equal(stake12.valueOf(), amount, "Staked amount doesn't match")
+            it("shouldn\'t let someone vote twice on the same person", async () => {
+                try {
+                    await stakeContract.setStake(rando1, 1, { from: rando2 });
+                } catch (error) {
+                    assert(error, "Transaction successful")
+                    assert(error.message.startsWith(PREFIX + "revert " + DOUBLE_VOTE_ERR))
+                }
+            })
+
+            it('should handle liquidation correctly', async () => {
+                const totalStakeBefore = await stakeContract.totalStake(rando1)
+                const upperThreshold = await stakeContract.upperThreshold()
+                const amount = upperThreshold.valueOf() - totalStakeBefore.valueOf();
+                
+                const balanceBefore = await web3.eth.getBalance(rando1)
+                await stakeContract.setStake(rando1, amount, { from: rando4 })
+                const balanceAfter = await web3.eth.getBalance(rando1)
+
+                assert.equal(balanceAfter.valueOf() - balanceBefore.valueOf(), web3.utils.toWei("1", "ether"), "Staked amount doesn't match")
+            })
+        })
+
+        describe("cancelStake", () => {
+            it("should let staker cancel properly", async () => {
+                const amount = -10000;
+                
+                const totalStakeBefore = await stakeContract.totalStake(rando2)
+                await stakeContract.setStake(rando2, amount, { from: rando3 })
+                await stakeContract.cancelStake(rando2, { from: rando3 })
+                const totalStakeAfter = await stakeContract.totalStake(rando2)
+
+                assert.equal(totalStakeAfter.toNumber(), totalStakeBefore.toNumber(), "Cancel error")
             })
         })
     })
 })
-// it('should set handle positive stake correctly', async () => {
-//     // THIS SHOULD FAIL because there is no voting proposal
-//     const trstContract = await TrstToken.deployed();
-//     const stakingContract = await Staking.deployed();
-
-//     // Setup 2 accounts.
-//     const A = accounts[0];
-//     const B = accounts[1];
-
-//     // Get initial balances of first and second account.
-//     const AStartingBalance = (await trstContract.balanceOf(A)).toNumber();
-
-//     // Make transaction from first account to second.
-//     const amount = 10000;
-//     await stakingContract.setStake(B, amount, { from: A });
-
-//     // Get balances of first and second account after the transactions.
-//     const AEndingBalance = (await trstContract.balanceOf(A)).toNumber();
-//     const BStakeByA = (await stakingContract.getStake(B, A)).toNumber();
-
-//     assert.equal(AEndingBalance, AStartingBalance - amount, "Amount wasn't correctly taken from A's balance");
-//     assert.equal(BStakeByA, amount, "Amount wasn't correctly staked to B");
-//   });

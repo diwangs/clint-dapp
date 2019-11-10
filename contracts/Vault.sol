@@ -74,7 +74,7 @@ contract Vault {
     * @param _term The promised duration to return the money (in seconds)
     */
     function proposeLoan(uint _value, uint _term) external {
-        require(loanStatus[msg.sender] == LoanStatus.IDLE, "You already have an active loan");
+        require(loanStatus[msg.sender] == LoanStatus.IDLE, "You already have an active proposal");
         // TODO: check _value?
 
         proposedLoan[msg.sender] = _value;
@@ -89,7 +89,7 @@ contract Vault {
     *   proposed loan but not yet granted
     */
     function cancelProposal() external {
-        require(loanStatus[msg.sender] == LoanStatus.PROPOSED, "You don't have an active loan");
+        require(loanStatus[msg.sender] == LoanStatus.PROPOSED, "You don't have an active proposal");
 
         _cancelLoan(msg.sender);
 
