@@ -7,12 +7,16 @@ import './Vault.sol';
 @author Senapati Sang Diwangkara, from Affluent team
 
 @title The Staking Contract
-*
-*	These following variable, events, and functions are used to let
-*	someone (voter) to stake token on somebody else's behalf (candidate)
-*
-* 	Inspired by ERC-20's delegated transfer mechanism, where voter -> spender
-*	and candidate -> owner
+
+Staking is a contract that handles the voting part of the Clint system. It also
+provides the means for administrator to set reward and punishment rate of the
+correct/false stake
+
+The logic in this contract is inspired by ERC-20's delegated transfer mechanism,
+where voter -> spender and candidate -> owner
+
+Among the 3 contracts, this contract must be deployed last, because it depends on the
+other two contracts.
 */
 contract Staking {
 	address root;
@@ -64,7 +68,7 @@ contract Staking {
 
 	// *** Events ***
 	event Vote(address indexed _candidate, address indexed _voter, int256 _value);
-	event Granted(address indexed _candidate);
+	event VoteConcluded(address indexed _candidate, bool voted);
 
 
 
@@ -76,7 +80,6 @@ contract Staking {
 	* 	setting it to the value we want. This must be done in the frontend.
 	* @param _candidate The address whose voter stake to
 	* @param _value The amount of stake
-	* @return a boolean indicating the set status
 	*/
 	function setStake(address payable _candidate, int256 _value) external {
 		require(_candidate != address(0), "Invalid address");
@@ -98,6 +101,10 @@ contract Staking {
 		emit Vote(_candidate, msg.sender, _value);
 	}
 
+	/**
+	* @dev Cancel the sender's stake on a candidate
+	* @param _candidate The address whom the sender staked to
+	*/
 	function cancelStake(address _candidate) external {
 		uint256 absStake = _abs(stake[_candidate][msg.sender]);
 
@@ -117,26 +124,50 @@ contract Staking {
 
 
 	// *** Administrative Methods ***
+	/**
+    * @dev Set the total stake's upper threshold. Can only be called by root
+    * @param _value New upperThreshold value
+    */
 	function setUpperThreshold(int value) external onlyRoot {
 		upperThreshold = value;
 	}
 
+	/**
+    * @dev Set the total stake's lower threshold. Can only be called by root
+    * @param _value New lowerThreshold value
+    */
 	function setLowerThreshold(int value) external onlyRoot {
 		lowerThreshold = value;
 	}
 
+	/**
+    * @dev Set the reward rate's numerator. Can only be called by root
+    * @param _value New rewardRateNum value
+    */
 	function setRewardRateNum(uint value) external onlyRoot {
 		rewardRateNum = value;
 	}
 
+	/**
+    * @dev Set the reward rate's denominator. Can only be called by root
+    * @param _value New rewardRateDenom value
+    */
 	function setRewardRateDenom(uint value) external onlyRoot {
 		rewardRateDenom = value;
 	}
 
+	/**
+    * @dev Set the punishment rate's numerator. Can only be called by root
+    * @param _value New punishmentRateNum value
+    */
 	function setPunishmentRateNum(uint value) external onlyRoot {
 		punishmentRateNum = value;
 	}
 
+	/**
+    * @dev Set the punishment rate's denominator. Can only be called by root
+    * @param _value New punishmentRateDenom value
+    */
 	function setPunishmentRateDenom(uint value) external onlyRoot {
 		punishmentRateDenom = value;
 	}
@@ -144,6 +175,10 @@ contract Staking {
 
 
 	// *** Internal Methods ***
+	/**
+    * @dev Check whether the votes are sufficient or not
+    * @param _candidate The candidate who will be checked
+    */
 	function _checkBallot(address payable _candidate) private {
 		if (totalStake[_candidate] >= upperThreshold || totalStake[_candidate] <= lowerThreshold) {
 			bool voted = totalStake[_candidate] >= upperThreshold;
@@ -156,10 +191,15 @@ contract Staking {
 			_giveIncentive(_candidate, voted);
 			_resetAllStakesOn(_candidate);
 
-			emit Granted(_candidate);
+			emit VoteConcluded(_candidate, voted);
 		}
 	}
 
+	/**
+    * @dev Give incentive to the voters that voted for a candidate
+    * @param _candidate The candidate whose voters will be acted upon
+	* @param voted Whether the loan is successful or not
+    */
 	function _giveIncentive(address _candidate, bool voted) private {
 		for (uint i = 0; i < stakers[_candidate].length; i++) {
             address staker = stakers[_candidate][i];
@@ -176,6 +216,10 @@ contract Staking {
 		}
 	}
 
+	/**
+    * @dev Reset all the stake that has been staked for a candidate
+    * @param _candidate The candidate whose voters will be reseted
+    */
 	function _resetAllStakesOn(address _candidate) private {
 		delete totalStake[_candidate];
 		for (uint i = 0; i < stakers[_candidate].length; i++) {
@@ -188,6 +232,11 @@ contract Staking {
 		delete stakers[_candidate];
 	}
 
+	/**
+    * @dev Convert int to uint in an absolute manner
+    * @param signed int value
+	* @return uint value
+    */
 	function _abs(int signed) private pure returns (uint) {
 		if (signed < 0) {
 			return uint(-signed);

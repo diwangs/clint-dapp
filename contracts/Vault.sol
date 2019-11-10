@@ -168,7 +168,7 @@ contract Vault {
 
     /**
     * @dev Set the lateness rate's numerator. Can only be called by root
-    * @param _value New latenessMultiplier value
+    * @param _value New latenessMultiplierNum value
     */
     function setLatenessMultiplierNum(uint _value) external onlyRoot {
         latenessMultiplierNum = _value;
