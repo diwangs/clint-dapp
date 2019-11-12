@@ -11,8 +11,9 @@
     "truffle": "^5.0.43"
   },
   "scripts": {
-    "start": "truffle develop",
+    "start": "truffle develop --log",
     "build": "truffle build && truffle migrate --network truffdev",
+    "ganache-build":"truffle build && truffle migrate",
     "test": "truffle test"
   }
 }

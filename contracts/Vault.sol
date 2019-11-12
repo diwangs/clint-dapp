@@ -1,6 +1,7 @@
 pragma solidity >=0.4.25 <0.6.0;
 
 import './TrstToken.sol';
+import './Staking.sol';
 
 /**
 @author Senapati Sang Diwangkara, from Affluent team
@@ -17,6 +18,7 @@ contract Vault {
 	address payable root;
 	address stakeContractAddr;
 	TrstToken tokenContract;
+	Staking stakeContract;
 
 	uint public interestRateNum;
 	uint public interestRateDenom;
@@ -142,6 +144,8 @@ contract Vault {
 
 		// Give Token incentive
 		tokenContract.transferFrom(root, msg.sender, 100000); // TODO: change incentive mechanics
+		stakeContract._giveIncentive(msg.sender, true);
+		stakeContract._resetAllStakesOn(msg.sender);
 	}
 
 
@@ -152,8 +156,12 @@ contract Vault {
 	* @param _candidate The proposer's address
 	*/
 	function cancelLoanOf(address _candidate) external onlyRoot {
-		require(loanStatus[_candidate] == LoanStatus.IDLE, "_candidate doesn't have active loan");
+		require(loanStatus[_candidate] != LoanStatus.IDLE, "_candidate doesn't have active loan or proposal");
 		_cancelLoan(_candidate);
+		if (loanStatus[_candidate] == LoanStatus.LENT) {
+			stakeContract._giveIncentive(msg.sender, false);
+		}
+		stakeContract._resetAllStakesOn(_candidate);
 
 		emit LoanStatusChange(_candidate, LoanStatus.IDLE, false);
 	}
@@ -210,6 +218,7 @@ contract Vault {
 	function setStakeContractAddr(address _address) external {
 		require(stakeContractAddr == address(0), "Address has been set");
 		stakeContractAddr = _address;
+		stakeContract = Staking(_address);
 	}
 
 

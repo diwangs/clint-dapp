@@ -20,6 +20,7 @@ other two contracts.
 */
 contract Staking {
 	address root;
+	address payable vaultContractAddr;
 	TrstToken tokenContract;
 	Vault vaultContract;
 
@@ -39,8 +40,13 @@ contract Staking {
 	mapping (address => int256) public totalStake;
 	mapping (address => address[]) private stakers;
 
-	constructor(address payable tokenContractAddr, address payable vaultContractAddr) public {
+	constructor(address payable tokenContractAddr, address payable _vaultContractAddr) public {
 		root = msg.sender;
+		tokenContract = TrstToken(tokenContractAddr);
+		tokenContract.setStakeContractAddr(address(this));
+		vaultContractAddr = _vaultContractAddr;
+		vaultContract = Vault(vaultContractAddr);
+		vaultContract.setStakeContractAddr(address(this));
 
 		upperThreshold = 100000;
 		lowerThreshold = -100000;
@@ -50,10 +56,6 @@ contract Staking {
 		punishmentRateNum = 1;
 		punishmentRateDenom = 1000;
 
-		tokenContract = TrstToken(tokenContractAddr);
-		tokenContract.setStakeContractAddr(address(this));
-		vaultContract = Vault(vaultContractAddr);
-		vaultContract.setStakeContractAddr(address(this));
 	}
 
 
@@ -61,6 +63,11 @@ contract Staking {
 	// *** Modifiers ***
 	modifier onlyRoot() {
 		require(msg.sender == root, "You're not authorized");
+		_;
+	}
+
+	modifier onlyVaultContract() {
+		require(msg.sender == vaultContractAddr, "You're not authorized");
 		_;
 	}
 
@@ -188,8 +195,8 @@ contract Staking {
 				vaultContract.liquidateLoan(_candidate);
 			}
 
-			_giveIncentive(_candidate, voted);
-			_resetAllStakesOn(_candidate);
+			// _giveIncentive(_candidate, voted);
+			// _resetAllStakesOn(_candidate);
 
 			emit VoteConcluded(_candidate, voted);
 		}
@@ -200,7 +207,7 @@ contract Staking {
 	* @param _candidate The candidate whose voters will be acted upon
 	* @param voted Whether the loan is successful or not
 	*/
-	function _giveIncentive(address _candidate, bool voted) private {
+	function _giveIncentive(address _candidate, bool voted) public onlyVaultContract {
 		for (uint i = 0; i < stakers[_candidate].length; i++) {
 			address staker = stakers[_candidate][i];
 			bool isYes = stake[_candidate][staker] > 0;
@@ -220,7 +227,7 @@ contract Staking {
 	* @dev Reset all the stake that has been staked for a candidate
 	* @param _candidate The candidate whose voters will be reseted
 	*/
-	function _resetAllStakesOn(address _candidate) private {
+	function _resetAllStakesOn(address _candidate) public onlyVaultContract {
 		delete totalStake[_candidate];
 		for (uint i = 0; i < stakers[_candidate].length; i++) {
 			address staker = stakers[_candidate][i];

@@ -173,12 +173,16 @@ contract('Staking', (accounts) => {
 		describe("setStake", () => {
 			it('should handle positive stake correctly', async () => {
 				const amount = 50000;
+				const trstContract = await TrstToken.deployed();
 				
 				const totalStakeBefore = await stakeContract.totalStake(rando1)
+				const balanceBefore = await trstContract.balance(rando2)
 				await stakeContract.setStake(rando1, amount, { from: rando2 })
 				const totalStakeAfter = await stakeContract.totalStake(rando1)
+				const balanceAfter = await trstContract.balance(rando2)
 
 				assert.equal(totalStakeAfter.valueOf() - totalStakeBefore.valueOf(), amount, "Staked amount doesn't match")
+				assert.equal(balanceBefore.valueOf() - balanceAfter.valueOf(), amount, "Token balance doesn't match")
 			})
 
 			it('should handle negative stake correctly', async () => {

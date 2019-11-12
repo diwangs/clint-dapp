@@ -40,11 +40,13 @@ The dApp is divided into 3 contracts:
 
 ## Dev Setup
 1. `npm install` or `yarn install`
-2. `yarn start`
-3. Open a new terminal, `yarn build`, close the terminal
+2. Start the Ethereum dev node and leave it running. Either,
+   * If you don't have Ganache installed, open a new terminal and `yarn start`
+   * If you have it installed, start Ganache and add `truffle-config.js` to its project setting
+3. `yarn build` or `yarn ganache-build`, depending if you use Ganache or not
 
 ## Testing
-`yarn exec truffle test`
+`yarn test`
 
 ## Deployment
 TBA
