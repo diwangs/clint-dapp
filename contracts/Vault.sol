@@ -32,6 +32,8 @@ contract Vault {
 	mapping (address => uint) public term; // promised duration to return the ETH, in seconds
 	mapping (address => uint) public lentTimestamp; // UNIX timestamp when the proposal is granted
 	// TODO: change to block number?
+	address[] public stakable;
+	mapping (address => uint) stakableIdx;
 
 
 
@@ -81,6 +83,9 @@ contract Vault {
 		term[msg.sender] = _term;
 		loanStatus[msg.sender] = LoanStatus.PROPOSED;
 
+		uint len = stakable.push(msg.sender);
+		stakableIdx[msg.sender] = len;
+
 		emit LoanStatusChange(msg.sender, LoanStatus.PROPOSED, true);
 	}
 
@@ -92,6 +97,7 @@ contract Vault {
 		require(loanStatus[msg.sender] == LoanStatus.PROPOSED, "You don't have an active proposal");
 
 		_cancelLoan(msg.sender);
+		_removeStakable(msg.sender);
 
 		emit LoanStatusChange(msg.sender, LoanStatus.IDLE, true);
 	}
@@ -107,6 +113,8 @@ contract Vault {
 		// change loanStatus and lentTimestamp
 		loanStatus[_candidate] = LoanStatus.LENT;
 		lentTimestamp[_candidate] = block.timestamp;
+
+		_removeStakable(msg.sender);
 
 		emit LoanStatusChange(_candidate, LoanStatus.LENT, true);
 	}
@@ -216,5 +224,16 @@ contract Vault {
 		delete loanStatus[_candidate];
 		delete term[_candidate];
 		delete lentTimestamp[_candidate];
+	}
+
+	function _removeStakable(address candidate) private {
+		uint index = stakableIdx[candidate];
+
+		if (stakable.length > 1) {
+			stakable[index] = stakable[stakable.length-1];
+		}
+
+		delete stakableIdx[candidate];
+		stakable.length--; // Implicitly recovers gas from last element storage
 	}
 }

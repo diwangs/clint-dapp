@@ -16,6 +16,7 @@ The dApp is divided into 3 contracts:
   * `redeem(amount)`
 * Vault
   * State getters
+    * `stakable()` ghetto method
     * `loanStatus(address)`
     * `proposedLoan(address)`
     * `term(address)`
