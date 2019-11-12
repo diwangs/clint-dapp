@@ -3,5 +3,5 @@ const Vault = artifacts.require("./Vault.sol");
 const Staking = artifacts.require("./Staking.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(Staking, TrstToken.address, Vault.address)
+	deployer.deploy(Staking, TrstToken.address, Vault.address)
 };

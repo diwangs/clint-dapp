@@ -20,8 +20,8 @@ other two contracts.
 */
 contract Staking {
 	address root;
-    TrstToken tokenContract;
-    Vault vaultContract;
+	TrstToken tokenContract;
+	Vault vaultContract;
 
 	int public upperThreshold; // How much mTrst untill liquidation?
 	int public lowerThreshold; // How much mTrst untill cancellation?
@@ -30,7 +30,7 @@ contract Staking {
 	uint public punishmentRateNum;
 	uint public punishmentRateDenom;
 
-    /**
+	/**
 	* @dev A variable that states how much a voter has staked for a given candidate
 	* Accessed by stake[candidate][voter]
 	* In ERC-20, this is called `_allowed`
@@ -50,19 +50,19 @@ contract Staking {
 		punishmentRateNum = 1;
 		punishmentRateDenom = 1000;
 
-        tokenContract = TrstToken(tokenContractAddr);
-        tokenContract.setStakeContractAddr(address(this));
-        vaultContract = Vault(vaultContractAddr);
-        vaultContract.setStakeContractAddr(address(this));
+		tokenContract = TrstToken(tokenContractAddr);
+		tokenContract.setStakeContractAddr(address(this));
+		vaultContract = Vault(vaultContractAddr);
+		vaultContract.setStakeContractAddr(address(this));
 	}
 
 
 
 	// *** Modifiers ***
 	modifier onlyRoot() {
-        require(msg.sender == root, "You're not authorized");
-        _;
-    }
+		require(msg.sender == root, "You're not authorized");
+		_;
+	}
 
 
 
@@ -84,15 +84,15 @@ contract Staking {
 	function setStake(address payable _candidate, int256 _value) external {
 		require(_candidate != address(0), "Invalid address");
 		require(_candidate != msg.sender, "Invalid address");
-        require(vaultContract.loanStatus(_candidate) == Vault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
-        require(stake[_candidate][msg.sender] == 0, "You've already voted");
+		require(vaultContract.loanStatus(_candidate) == Vault.LoanStatus.PROPOSED, "The candidate isn't asking any vote");
+		require(stake[_candidate][msg.sender] == 0, "You've already voted");
 		// TODO: clamp mechanism
 
 		stakers[_candidate].push(msg.sender);
 
 		// Move balance accordingly
 		totalStake[_candidate] += _value;
-        tokenContract.transferFrom(msg.sender, root, _abs(_value));
+		tokenContract.transferFrom(msg.sender, root, _abs(_value));
 		stake[_candidate][msg.sender] = _value;
 
 		// Act if trust threshold exceeded
@@ -125,49 +125,49 @@ contract Staking {
 
 	// *** Administrative Methods ***
 	/**
-    * @dev Set the total stake's upper threshold. Can only be called by root
-    * @param _value New upperThreshold value
-    */
+	* @dev Set the total stake's upper threshold. Can only be called by root
+	* @param _value New upperThreshold value
+	*/
 	function setUpperThreshold(int value) external onlyRoot {
 		upperThreshold = value;
 	}
 
 	/**
-    * @dev Set the total stake's lower threshold. Can only be called by root
-    * @param _value New lowerThreshold value
-    */
+	* @dev Set the total stake's lower threshold. Can only be called by root
+	* @param _value New lowerThreshold value
+	*/
 	function setLowerThreshold(int value) external onlyRoot {
 		lowerThreshold = value;
 	}
 
 	/**
-    * @dev Set the reward rate's numerator. Can only be called by root
-    * @param _value New rewardRateNum value
-    */
+	* @dev Set the reward rate's numerator. Can only be called by root
+	* @param _value New rewardRateNum value
+	*/
 	function setRewardRateNum(uint value) external onlyRoot {
 		rewardRateNum = value;
 	}
 
 	/**
-    * @dev Set the reward rate's denominator. Can only be called by root
-    * @param _value New rewardRateDenom value
-    */
+	* @dev Set the reward rate's denominator. Can only be called by root
+	* @param _value New rewardRateDenom value
+	*/
 	function setRewardRateDenom(uint value) external onlyRoot {
 		rewardRateDenom = value;
 	}
 
 	/**
-    * @dev Set the punishment rate's numerator. Can only be called by root
-    * @param _value New punishmentRateNum value
-    */
+	* @dev Set the punishment rate's numerator. Can only be called by root
+	* @param _value New punishmentRateNum value
+	*/
 	function setPunishmentRateNum(uint value) external onlyRoot {
 		punishmentRateNum = value;
 	}
 
 	/**
-    * @dev Set the punishment rate's denominator. Can only be called by root
-    * @param _value New punishmentRateDenom value
-    */
+	* @dev Set the punishment rate's denominator. Can only be called by root
+	* @param _value New punishmentRateDenom value
+	*/
 	function setPunishmentRateDenom(uint value) external onlyRoot {
 		punishmentRateDenom = value;
 	}
@@ -176,9 +176,9 @@ contract Staking {
 
 	// *** Internal Methods ***
 	/**
-    * @dev Check whether the votes are sufficient or not
-    * @param _candidate The candidate who will be checked
-    */
+	* @dev Check whether the votes are sufficient or not
+	* @param _candidate The candidate who will be checked
+	*/
 	function _checkBallot(address payable _candidate) private {
 		if (totalStake[_candidate] >= upperThreshold || totalStake[_candidate] <= lowerThreshold) {
 			bool voted = totalStake[_candidate] >= upperThreshold;
@@ -196,13 +196,13 @@ contract Staking {
 	}
 
 	/**
-    * @dev Give incentive to the voters that voted for a candidate
-    * @param _candidate The candidate whose voters will be acted upon
+	* @dev Give incentive to the voters that voted for a candidate
+	* @param _candidate The candidate whose voters will be acted upon
 	* @param voted Whether the loan is successful or not
-    */
+	*/
 	function _giveIncentive(address _candidate, bool voted) private {
 		for (uint i = 0; i < stakers[_candidate].length; i++) {
-            address staker = stakers[_candidate][i];
+			address staker = stakers[_candidate][i];
 			bool isYes = stake[_candidate][staker] > 0;
 			uint256 absStake = _abs(stake[_candidate][staker]);
 
@@ -217,15 +217,15 @@ contract Staking {
 	}
 
 	/**
-    * @dev Reset all the stake that has been staked for a candidate
-    * @param _candidate The candidate whose voters will be reseted
-    */
+	* @dev Reset all the stake that has been staked for a candidate
+	* @param _candidate The candidate whose voters will be reseted
+	*/
 	function _resetAllStakesOn(address _candidate) private {
 		delete totalStake[_candidate];
 		for (uint i = 0; i < stakers[_candidate].length; i++) {
-            address staker = stakers[_candidate][i];
+			address staker = stakers[_candidate][i];
 			uint256 absStake = _abs(stake[_candidate][staker]);
-            tokenContract.transferFrom(root, staker, absStake);
+			tokenContract.transferFrom(root, staker, absStake);
 
 			delete stake[_candidate][stakers[_candidate][i]];
 		}
@@ -233,10 +233,10 @@ contract Staking {
 	}
 
 	/**
-    * @dev Convert int to uint in an absolute manner
-    * @param signed int value
+	* @dev Convert int to uint in an absolute manner
+	* @param signed int value
 	* @return uint value
-    */
+	*/
 	function _abs(int signed) private pure returns (uint) {
 		if (signed < 0) {
 			return uint(-signed);

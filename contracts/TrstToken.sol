@@ -15,8 +15,8 @@ contract depended on it.
 */
 contract TrstToken {
 	address payable root;
-    address stakeContractAddr;
-    address vaultContractAddr;
+	address stakeContractAddr;
+	address vaultContractAddr;
 
 	uint256 public totalSupply; // total amount of token in the system
 	uint256 public price; // in Wei/mTrst
@@ -36,19 +36,19 @@ contract TrstToken {
 
 
 	// *** Modifiers ***
-    modifier onlyRoot() {
-        require(msg.sender == root, "You're not authorized");
-        _;
-    }
+	modifier onlyRoot() {
+		require(msg.sender == root, "You're not authorized");
+		_;
+	}
 
-    modifier onlyClint() {
-        require(msg.sender == address(this) ||
+	modifier onlyClint() {
+		require(msg.sender == address(this) ||
 			msg.sender == vaultContractAddr ||
 			msg.sender == stakeContractAddr ||
 			msg.sender == root,
 			"You're not authorized");
-        _;
-    }
+		_;
+	}
 
 
 
@@ -58,8 +58,8 @@ contract TrstToken {
 
 
 
-    // *** Operation Methods ***
-    /**
+	// *** Operation Methods ***
+	/**
 	* @dev Transfer some tokens from an account to another. Can only be done by another Clint
 	* 	contract or root
 	* @param _from The address to transfer from
@@ -74,14 +74,14 @@ contract TrstToken {
 	* @dev Redeem some token to ETH, will be sent to sender's address
 	* @param _value The amount to be redeemed
 	*/
-    function redeem(uint256 _value) external {
+	function redeem(uint256 _value) external {
 		_transferFrom(msg.sender, root, _value);
-        msg.sender.transfer(_value * price);
-    }
+		msg.sender.transfer(_value * price);
+	}
 
 
 
-    // *** Administrative Methods ***
+	// *** Administrative Methods ***
 	/**
 	* @dev Create token out of thin air. Can only be called by root.
 	* @param _address Destination address
@@ -99,7 +99,7 @@ contract TrstToken {
 	* @param _address Victim's address
 	* @param _value The amount to be burned
 	*/
-    function burn(address _address, uint256 _value) external onlyRoot {
+	function burn(address _address, uint256 _value) external onlyRoot {
 		balance[_address] -= _value;
 		totalSupply -= _value;
 
@@ -125,32 +125,32 @@ contract TrstToken {
 	* @dev Withdraw ETH from the contract into root's account. Can only be called by root
 	* @param _value Withdrawal amount
 	*/
-    function withdraw(uint _value) external onlyRoot {
-        root.transfer(_value);
-    }
+	function withdraw(uint _value) external onlyRoot {
+		root.transfer(_value);
+	}
 
 	/**
 	* @dev Set the vault contract's address. Can only be called once.
 	* @param _address vault contract's address
 	*/
 	function setVaultContractAddr(address _address) external {
-        require(vaultContractAddr == address(0), "Address has been set");
-        vaultContractAddr = _address;
-    }
+		require(vaultContractAddr == address(0), "Address has been set");
+		vaultContractAddr = _address;
+	}
 
 	/**
 	* @dev Set the stake contract's address. Can only be called once
 	* @param _address stake contract's address
 	*/
-    function setStakeContractAddr(address _address) external {
-        require(stakeContractAddr == address(0), "Address has been set");
-        stakeContractAddr = _address;
-    }
+	function setStakeContractAddr(address _address) external {
+		require(stakeContractAddr == address(0), "Address has been set");
+		stakeContractAddr = _address;
+	}
 
 
 
 	// *** Internal Methods ***
-    /**
+	/**
 	* @dev Internal method for transfering some tokens from an account to another
 	* @param _from The address to transfer from
 	* @param _to The address to transfer to
