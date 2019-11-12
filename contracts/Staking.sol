@@ -128,6 +128,43 @@ contract Staking {
 		}
 	}
 
+	/**
+	* @dev Calculate incentive based on stake and give them accordingly. Can only be called
+	* 	by vault contract
+	* @param _candidate The candidate whose voters will be acted upon
+	* @param voted Whether the loan is successful or not
+	*/
+	function calcAndGiveIncentive(address _candidate, bool voted) external onlyVaultContract {
+		for (uint i = 0; i < stakers[_candidate].length; i++) {
+			address staker = stakers[_candidate][i];
+			bool isYes = stake[_candidate][staker] > 0;
+			uint256 absStake = _abs(stake[_candidate][staker]);
+
+			bool reward = (voted && isYes) || (!voted && !isYes); // XNOR
+			if (reward) {
+				tokenContract.transferFrom(root, staker, rewardRateNum * absStake / rewardRateDenom);
+			} else {
+				tokenContract.transferFrom(staker, root, punishmentRateNum * absStake / punishmentRateDenom);
+			}
+		}
+	}
+
+	/**
+	* @dev Reset all the stake that has been staked for a candidate. Can only be called by vault contract
+	* @param _candidate The candidate whose voters will be reseted
+	*/
+	function resetAllStakesOn(address _candidate) external onlyVaultContract {
+		delete totalStake[_candidate];
+		for (uint i = 0; i < stakers[_candidate].length; i++) {
+			address staker = stakers[_candidate][i];
+			uint256 absStake = _abs(stake[_candidate][staker]);
+			tokenContract.transferFrom(root, staker, absStake);
+
+			delete stake[_candidate][stakers[_candidate][i]];
+		}
+		delete stakers[_candidate];
+	}
+
 
 
 	// *** Administrative Methods ***
@@ -195,48 +232,11 @@ contract Staking {
 				vaultContract.liquidateLoan(_candidate);
 			}
 
-			// _giveIncentive(_candidate, voted);
-			// _resetAllStakesOn(_candidate);
+			// calcAndGiveIncentive(_candidate, voted);
+			// resetAllStakesOn(_candidate);
 
 			emit VoteConcluded(_candidate, voted);
 		}
-	}
-
-	/**
-	* @dev Give incentive to the voters that voted for a candidate
-	* @param _candidate The candidate whose voters will be acted upon
-	* @param voted Whether the loan is successful or not
-	*/
-	function _giveIncentive(address _candidate, bool voted) public onlyVaultContract {
-		for (uint i = 0; i < stakers[_candidate].length; i++) {
-			address staker = stakers[_candidate][i];
-			bool isYes = stake[_candidate][staker] > 0;
-			uint256 absStake = _abs(stake[_candidate][staker]);
-
-			bool reward = (voted && isYes) || (!voted && !isYes); // XNOR
-			// reward the yes, punish the no
-			if (reward) {
-				tokenContract.transferFrom(root, staker, rewardRateNum * absStake / rewardRateDenom);
-			} else {
-				tokenContract.transferFrom(staker, root, punishmentRateNum * absStake / punishmentRateDenom);
-			}
-		}
-	}
-
-	/**
-	* @dev Reset all the stake that has been staked for a candidate
-	* @param _candidate The candidate whose voters will be reseted
-	*/
-	function _resetAllStakesOn(address _candidate) public onlyVaultContract {
-		delete totalStake[_candidate];
-		for (uint i = 0; i < stakers[_candidate].length; i++) {
-			address staker = stakers[_candidate][i];
-			uint256 absStake = _abs(stake[_candidate][staker]);
-			tokenContract.transferFrom(root, staker, absStake);
-
-			delete stake[_candidate][stakers[_candidate][i]];
-		}
-		delete stakers[_candidate];
 	}
 
 	/**

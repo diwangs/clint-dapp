@@ -144,8 +144,8 @@ contract Vault {
 
 		// Give Token incentive
 		tokenContract.transferFrom(root, msg.sender, 100000); // TODO: change incentive mechanics
-		stakeContract._giveIncentive(msg.sender, true);
-		stakeContract._resetAllStakesOn(msg.sender);
+		stakeContract.calcAndGiveIncentive(msg.sender, true);
+		stakeContract.resetAllStakesOn(msg.sender);
 	}
 
 
@@ -159,9 +159,9 @@ contract Vault {
 		require(loanStatus[_candidate] != LoanStatus.IDLE, "_candidate doesn't have active loan or proposal");
 		_cancelLoan(_candidate);
 		if (loanStatus[_candidate] == LoanStatus.LENT) {
-			stakeContract._giveIncentive(msg.sender, false);
+			stakeContract.calcAndGiveIncentive(msg.sender, false);
 		}
-		stakeContract._resetAllStakesOn(_candidate);
+		stakeContract.resetAllStakesOn(_candidate);
 
 		emit LoanStatusChange(_candidate, LoanStatus.IDLE, false);
 	}
