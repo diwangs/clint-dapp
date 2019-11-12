@@ -126,7 +126,7 @@ contract Staking {
 	// *** Administrative Methods ***
 	/**
 	* @dev Set the total stake's upper threshold. Can only be called by root
-	* @param _value New upperThreshold value
+	* @param value New upperThreshold value
 	*/
 	function setUpperThreshold(int value) external onlyRoot {
 		upperThreshold = value;
@@ -134,7 +134,7 @@ contract Staking {
 
 	/**
 	* @dev Set the total stake's lower threshold. Can only be called by root
-	* @param _value New lowerThreshold value
+	* @param value New lowerThreshold value
 	*/
 	function setLowerThreshold(int value) external onlyRoot {
 		lowerThreshold = value;
@@ -142,7 +142,7 @@ contract Staking {
 
 	/**
 	* @dev Set the reward rate's numerator. Can only be called by root
-	* @param _value New rewardRateNum value
+	* @param value New rewardRateNum value
 	*/
 	function setRewardRateNum(uint value) external onlyRoot {
 		rewardRateNum = value;
@@ -150,7 +150,7 @@ contract Staking {
 
 	/**
 	* @dev Set the reward rate's denominator. Can only be called by root
-	* @param _value New rewardRateDenom value
+	* @param value New rewardRateDenom value
 	*/
 	function setRewardRateDenom(uint value) external onlyRoot {
 		rewardRateDenom = value;
@@ -158,7 +158,7 @@ contract Staking {
 
 	/**
 	* @dev Set the punishment rate's numerator. Can only be called by root
-	* @param _value New punishmentRateNum value
+	* @param value New punishmentRateNum value
 	*/
 	function setPunishmentRateNum(uint value) external onlyRoot {
 		punishmentRateNum = value;
@@ -166,7 +166,7 @@ contract Staking {
 
 	/**
 	* @dev Set the punishment rate's denominator. Can only be called by root
-	* @param _value New punishmentRateDenom value
+	* @param value New punishmentRateDenom value
 	*/
 	function setPunishmentRateDenom(uint value) external onlyRoot {
 		punishmentRateDenom = value;

@@ -22,7 +22,7 @@ The dApp is divided into 3 contracts:
     * `lentTimestamp(address)`
     * `interestRateNum()`, `interestRateDenom()`
     * `latenessMultiplierNum()`, `latenessMultiplierDenom()`
-  * `proposeLoan(amount, dueDuration)`
+  * `proposeLoan(amount, term)`
   * `cancelProposal()`
   * `returnLoan()`
 * Staking
@@ -39,7 +39,8 @@ The dApp is divided into 3 contracts:
 
 ## Dev Setup
 1. `npm install` or `yarn install`
-2. Install metamask browser plugin (from your browser web store), this is used to enable your browser to communicate with Ethereum
+2. `yarn start`
+3. Open a new terminal, `yarn build`, close the terminal
 
 ## Testing
 `yarn exec truffle test`

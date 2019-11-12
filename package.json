@@ -9,5 +9,10 @@
   "dependencies": {
     "bignumber.js": "^9.0.0",
     "truffle": "^5.0.43"
+  },
+  "scripts": {
+    "start": "truffle develop",
+    "build": "truffle build && truffle migrate --network truffdev",
+    "test": "truffle test"
   }
 }
